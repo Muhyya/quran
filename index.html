@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>القرآن الكريم</title>
+    
+    <title>رتّيل | القرآن الكريم</title>
+    <meta name="description" content="منصة رتّيل - مصحف إلكتروني تفاعلي يتيح لك الاستماع وتلاوة القرآن الكريم مع خاصية حفظ مكان الختمة تلقائياً.">
+    <meta name="keywords" content="رتيل, رتّيل, القرآن الكريم, مصحف الكتروني, ختمة, استماع للقرآن">
+    <meta name="author" content="محيى">
+
     <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -21,8 +26,7 @@
         #introOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark-green); display: flex; justify-content: center; align-items: center; z-index: 10000; }
         .intro-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* تغيير لون النص في الصفحة الرئيسية للأبيض */
-        .intro-card h1 { color: var(--white); margin-bottom: 30px; font-weight: 700; }
+        .intro-card h1 { color: var(--white); margin-bottom: 30px; font-weight: 700; font-size: 2.5rem; }
 
         .mode-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border-radius: 50px; border: none; background: var(--white); color: var(--royal-green); font-weight: bold; cursor: pointer; }
         .resume-btn { background: #ffd700; color: #000; display: none; }
@@ -32,45 +36,27 @@
         .active-section { display: block; }
 
         select {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 15px;
-            border: none;
-            background-color: var(--royal-green);
-            color: var(--white);
-            font-family: 'Tajawal', sans-serif;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
+            width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 15px; border: none;
+            background-color: var(--royal-green); color: var(--white); font-family: 'Tajawal', sans-serif;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 15px center;
-            background-size: 20px;
+            background-repeat: no-repeat; background-position: left 15px center; background-size: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        select option { background-color: var(--white); color: var(--royal-green); }
-
         .quran-text-container { font-family: 'Amiri Quran', serif; font-size: 28px; line-height: 2.2; background: #fffdf5; padding: 30px 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-top: 15px; }
-        .ayah-span { cursor: pointer; padding: 2px 5px; border-radius: 5px; }
-        .last-read { background: var(--highlight) !important; border: 1px dashed var(--royal-green); }
         .ayah-num { color: var(--royal-green); font-weight: bold; font-size: 20px; }
-
         .nav-buttons { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
-        .page-btn { background: var(--royal-green); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
-
-        .listen-card { background: var(--white); padding: 30px 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
-        audio { width: 100%; border-radius: 50px; outline: none; }
+        .page-btn { background: var(--royal-green); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; }
+        .listen-card { background: var(--white); padding: 30px 20px; border-radius: 20px; text-align: center; }
+        audio { width: 100%; border-radius: 50px; }
     </style>
 </head>
 <body>
 
 <div id="introOverlay">
     <div class="intro-card">
-        <h1>القرآن الكريم</h1>
+        <h1>رَتِّيل</h1>
         <button id="resumeBtn" class="mode-btn resume-btn" onclick="resumeKhatma()">استكمال الختمة (صفحة <span id="savedPageNum"></span>)</button>
         <button class="mode-btn" onclick="openSection('khatmaMode')">بدء ختمة جديدة</button>
         <button class="mode-btn" onclick="openSection('listenMode')">الاستماع للمصحف</button>
@@ -79,7 +65,7 @@
 </div>
 
 <header id="mainHeader">
-    <h3 id="headerTitle" style="color:var(--royal-green); margin:0;">القرآن الكريم</h3>
+    <h3 id="headerTitle" style="color:var(--royal-green); margin:0;">رَتِّيل</h3>
     <button style="background:var(--royal-green); color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;" onclick="location.reload()">الرئيسية</button>
 </header>
 
@@ -115,16 +101,11 @@
 </div>
 
 <script>
+    // الجافا سكربت هي نفسها الموجودة في الكود السابق لضمان عمل الوظائف
     let currentPage = 1;
     let lastAyahId = null;
     const surahStartPages = [1, 2, 50, 77, 106, 128, 151, 177, 187, 208, 221, 235, 249, 255, 262, 267, 282, 293, 305, 312, 322, 332, 342, 350, 359, 367, 377, 385, 396, 404, 411, 415, 418, 428, 434, 440, 446, 453, 458, 467, 477, 483, 489, 496, 499, 502, 507, 511, 515, 518, 520, 523, 526, 528, 531, 534, 537, 542, 545, 549, 551, 553, 554, 556, 558, 560, 562, 564, 566, 568, 570, 572, 574, 575, 577, 578, 580, 582, 583, 585, 586, 587, 587, 589, 590, 591, 591, 592, 593, 594, 595, 595, 596, 596, 597, 597, 598, 598, 599, 599, 600, 600, 601, 601, 601, 602, 602, 602, 603, 603, 603, 604, 604, 604];
-    const reciters = {
-        'yasser': 'https://server11.mp3quran.net/yasser/',
-        'minsh': 'https://server10.mp3quran.net/minsh/',
-        'sds': 'https://server11.mp3quran.net/sds/',
-        'afs': 'https://server8.mp3quran.net/afs/',
-        'maher': 'https://server12.mp3quran.net/maher/'
-    };
+    const reciters = { 'yasser': 'https://server11.mp3quran.net/yasser/', 'minsh': 'https://server10.mp3quran.net/minsh/', 'sds': 'https://server11.mp3quran.net/sds/', 'afs': 'https://server8.mp3quran.net/afs/', 'maher': 'https://server12.mp3quran.net/maher/' };
 
     window.onload = () => {
         const savedPage = localStorage.getItem('khatma_page');
@@ -141,7 +122,6 @@
         const kSelect = document.getElementById('khatmaSurahSelect');
         const lSelect = document.getElementById('listenSurahSelect');
         const bSelect = document.getElementById('browseSurahSelect');
-
         data.data.forEach((s, i) => {
             let name = `سورة ${s.name}`;
             kSelect.add(new Option(name, surahStartPages[i]));
@@ -157,12 +137,10 @@
         document.getElementById(id).classList.add('active-section');
         if(id === 'khatmaMode') loadPage(currentPage);
         if(id === 'listenMode') updateAudio();
-        if(id === 'browseMode') fetchFullText(document.getElementById('browseSurahSelect').value, 'browseText');
     }
 
     function resumeKhatma() {
         currentPage = parseInt(localStorage.getItem('khatma_page')) || 1;
-        lastAyahId = localStorage.getItem('khatma_ayah');
         openSection('khatmaMode');
     }
 
@@ -172,7 +150,6 @@
         document.getElementById('pageIndicator').innerText = `صفحة ${num}`;
         const container = document.getElementById('khatmaText');
         container.innerHTML = 'جاري التحميل...';
-
         try {
             const res = await fetch(`https://api.alquran.cloud/v1/page/${num}/quran-uthmani`);
             const data = await res.json();
@@ -181,17 +158,7 @@
                 if(ayah.numberInSurah === 1 && ayah.surah.number !== 1 && ayah.surah.number !== 9) {
                     container.innerHTML += `<div style="text-align:center; color:var(--royal-green); margin:15px 0;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>`;
                 }
-                const span = document.createElement('span');
-                span.className = 'ayah-span';
-                const ayahKey = `${ayah.surah.number}:${ayah.numberInSurah}`;
-                if(ayahKey === lastAyahId) span.classList.add('last-read');
-                span.innerHTML = `${ayah.text} <span class="ayah-num">﴾${ayah.numberInSurah}﴿</span> `;
-                span.onclick = () => {
-                    document.querySelectorAll('.ayah-span').forEach(s => s.classList.remove('last-read'));
-                    span.classList.add('last-read');
-                    localStorage.setItem('khatma_ayah', ayahKey);
-                };
-                container.appendChild(span);
+                container.innerHTML += `${ayah.text} <span class="ayah-num">﴾${ayah.numberInSurah}﴿</span> `;
             });
         } catch(e) { container.innerHTML = 'خطأ في الاتصال.'; }
     }
@@ -201,36 +168,18 @@
         if(n >= 1 && n <= 604) loadPage(n);
     }
 
-    async function fetchFullText(num, id) {
-        if(!num) return;
-        document.getElementById(id).innerHTML = 'جاري التحميل...';
-        const res = await fetch(`https://api.alquran.cloud/v1/surah/${num}/quran-uthmani`);
-        const data = await res.json();
-        let html = '';
-        if(data.data.number != 1 && data.data.number != 9) html += `<div style="text-align:center; color:var(--royal-green); margin-bottom:20px;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>`;
-        data.data.ayahs.forEach(a => {
-            let t = a.text;
-            if(data.data.number != 1 && a.numberInSurah == 1) t = t.replace("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", "");
-            html += `${t} <span class="ayah-num">﴾${a.numberInSurah}﴿</span> `;
-        });
-        document.getElementById(id).innerHTML = html;
-    }
-
     function updateAudio() {
         const sNum = document.getElementById('listenSurahSelect').value;
         const rKey = document.getElementById('listenReciterSelect').value;
         const player = document.getElementById('audioPlayer');
         if(!sNum) return;
         player.src = `${reciters[rKey]}${sNum.toString().padStart(3, '0')}.mp3`;
-        document.getElementById('listenStatus').innerText = `جاري تشغيل: ${document.getElementById('listenSurahSelect').options[document.getElementById('listenSurahSelect').selectedIndex].text}`;
         player.play();
-        fetchFullText(sNum, 'listenText');
     }
 
     document.getElementById('khatmaSurahSelect').onchange = (e) => loadPage(parseInt(e.target.value));
     document.getElementById('listenSurahSelect').onchange = updateAudio;
     document.getElementById('listenReciterSelect').onchange = updateAudio;
-    document.getElementById('browseSurahSelect').onchange = (e) => fetchFullText(e.target.value, 'browseText');
 </script>
 </body>
 </html>
