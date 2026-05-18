@@ -31,12 +31,19 @@
         .app-section { display: none; max-width: 800px; margin: 20px auto; padding: 15px; }
         .active-section { display: block; }
 
-        select {
+        select, input[type="number"] {
             width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 15px; border: none;
             background-color: var(--royal-green); color: var(--white); font-family: 'Tajawal', sans-serif;
             font-size: 1.1rem; font-weight: bold; cursor: pointer; appearance: none;
+        }
+        
+        select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat; background-position: left 15px center; background-size: 20px;
+        }
+
+        input[type="number"] {
+            background-color: #e0e0e0; color: #333; text-align: center; display: none;
         }
 
         .info-card { background: var(--white); padding: 20px; border-radius: 15px; margin-bottom: 20px; border-right: 5px solid var(--royal-green); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -55,7 +62,21 @@
 
         .nav-buttons { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
         .page-btn { background: var(--royal-green); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: bold; }
-        audio { width: 100%; border-radius: 50px; }
+        
+        .voice-btn {
+            background: #d32f2f; color: white; border: none; padding: 12px 20px; 
+            border-radius: 50px; cursor: pointer; font-weight: bold; margin-bottom: 15px;
+            display: inline-flex; align-items: center; gap: 8px; justify-content: center; width: 100%;
+        }
+        .voice-btn.listening { background: #4caf50; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        audio { width: 100%; border-radius: 50px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -88,6 +109,11 @@
 
 <div id="listenMode" class="app-section">
     <div class="listen-card" style="background:white; padding:20px; border-radius:15px; margin-bottom:20px; text-align:center;">
+        
+        <button id="voiceBtn" class="voice-btn" onclick="startVoiceSearch()">
+            🎤 اضغط وتحدث (مثال: افتح سورة النساء)
+        </button>
+
         <select id="listenSurahSelect"></select>
         <select id="listenReciterSelect">
             <option value="yasser">ياسر الدوسري</option>
@@ -96,6 +122,19 @@
             <option value="afs">مشاري العفاسي</option>
             <option value="maher">ماهر المعيقلي</option>
         </select>
+
+        <div style="margin: 15px 0; text-align: right;">
+            <label style="font-weight: bold; color: var(--royal-green); display: block; margin-bottom: 5px;">نظام تكرار السورة:</label>
+            <select id="repeatSelect" onchange="toggleCustomInput()" style="background-color: #388e3c; margin-bottom: 5px;">
+                <option value="1">تشغيل مرة واحدة (بدون تكرار)</option>
+                <option value="2">تشغيل مرتين</option>
+                <option value="3">تشغيل 3 مرات</option>
+                <option value="infinite">تكرار لا نهائي ∞</option>
+                <option value="custom">تحديد عدد مخصص...</option>
+            </select>
+            <input type="number" id="customRepeatInput" min="1" placeholder="اكتب عدد المرات هنا كأرقام">
+        </div>
+
         <audio id="audioPlayer" controls></audio>
     </div>
     <div id="listenText" class="quran-text-container"></div>
@@ -116,12 +155,14 @@
     let currentPage = 1;
     let detailLevel = 'important';
     let currentSurahData = null;
+    
+    // متغيرات لتتبع تكرار الصوت
+    let currentPlayCount = 1;
 
-    // بيانات الموسوعة المحسنة
     const surahEncyclopedia = {
         1: { topic: "أم الكتاب وأساس الصلاة", people: "المؤمنين، الأنبياء، المكذبين", naming: "فاتحة الكتاب", goals: "إثبات التوحيد والعبودية", merit: "أعظم سورة ولا تصح الصلاة بدونها", lesson: "إخلاص الوجهة لله وحده" },
         2: { topic: "الاستخلاف في الأرض ومنهج الأمة", people: "آدم، إبراهيم، بني إسرائيل", naming: "لقصة البقرة مع بني إسرائيل", goals: "إعداد الأمة لعمارة الأرض بالدين", merit: "لا تستطيعها البطلة (السحرة) وتطرد الشياطين", lesson: "الطاعة المطلقة لله والامتثال لأمره" },
-        12: { topic: "رعاية الله لأنبيائه وتحقيق الرؤى", people: "يوسف، يعقوب، إخوة يوسف، امرأة العزيز", naming: "لقصة نبي الله يوسف", goals: "تثبيت فؤاد النبي ﷺ بالقصص", merit: "أحسن القصص وفيها تسلية لكل محزون", lesson: "الثبات في وجه الفتن والصبر مفتاح الفرج" },
+        12: { topic: "رعاية الله لأنبيائه وتحقيق الرؤى", people: "يوسف، يعقوب، إخوة يوسف, امرأة العزيز", naming: "لقصة نبي الله يوسف", goals: "تثبيت فؤاد النبي ﷺ بالقصص", merit: "أحسن القصص وفيها تسلية لكل محزون", lesson: "الثبات في وجه الفتن والصبر مفتاح الفرج" },
         18: { topic: "الاعتصام بالوحي من فتن الدنيا", people: "أهل الكهف، الخضر، ذو القرنين", naming: "لذكر قصة أصحاب الكهف", goals: "النجاة من الفتن الأربعة (الدين، المال، العلم، السلطة)", merit: "نور لمن قرأها يوم الجمعة وعصمة من الدجال", lesson: "اليقين بأن الدنيا فانية والآخرة خير وأبقى" },
         36: { topic: "إثبات البعث والرسالة والجزاء", people: "أصحاب القرية، مؤمن آل ياسين", naming: "للبدء بالحروف المقطعة (يس)", goals: "تقرير العقيدة والبعث والنشور", merit: "قلب القرآن وفيها تيسير للأمور", lesson: "المبادرة بالدعوة والعمل قبل الموت" }
     };
@@ -143,6 +184,7 @@
             document.getElementById('savedPageNum').innerText = savedPage;
         }
         fetchSurahs();
+        setupAudioLoopLogic();
     };
 
     async function fetchSurahs() {
@@ -156,6 +198,105 @@
         });
     }
 
+    // منطق تكرار الصوت الذكي
+    function setupAudioLoopLogic() {
+        const player = document.getElementById('audioPlayer');
+        player.onended = () => {
+            const mode = document.getElementById('repeatSelect').value;
+            
+            if (mode === 'infinite') {
+                player.play();
+            } else {
+                let maxPlays = parseInt(mode);
+                if (mode === 'custom') {
+                    maxPlays = parseInt(document.getElementById('customRepeatInput').value) || 1;
+                }
+                
+                if (currentPlayCount < maxPlays) {
+                    currentPlayCount++;
+                    player.play();
+                } else {
+                    currentPlayCount = 1; // إعادة التعيين بعد انتهاء المرات
+                }
+            }
+        };
+    }
+
+    function toggleCustomInput() {
+        const mode = document.getElementById('repeatSelect').value;
+        document.getElementById('customRepeatInput').style.display = (mode === 'custom') ? 'block' : 'none';
+    }
+
+    // دالة البحث والتشغيل الصوتي
+    function startVoiceSearch() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("عذراً، متصفحك الحالي لا يدعم ميزة التعرف على الصوت. جرب متصفح Google Chrome.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'ar-SA'; // تحديد اللغة العربية المخصصة للسعودية
+        const btn = document.getElementById('voiceBtn');
+        
+        recognition.onstart = () => {
+            btn.innerText = "🎙️ جاري الاستماع.. تحدث الآن";
+            btn.classList.add('listening');
+        };
+
+        recognition.onend = () => {
+            btn.innerText = "🎤 اضغط وتحدث (مثال: افتح سورة النساء)";
+            btn.classList.remove('listening');
+        };
+
+        recognition.onresult = (event) => {
+            let textResult = event.results[0][0].transcript;
+            // تنظيف النص وتبسيطه للبحث
+            textResult = textResult.replace("سوره", "سورة").trim();
+            
+            let surahName = "";
+            if (textResult.includes("افتح سورة")) {
+                surahName = textResult.split("افتح سورة")[1].trim();
+            } else if (textResult.includes("سورة")) {
+                surahName = textResult.split("سورة")[1].trim();
+            } else {
+                surahName = textResult;
+            }
+
+            if(surahName) {
+                matchAndPlaySurah(surahName);
+            }
+        };
+
+        recognition.onerror = () => {
+            alert("حدث خطأ في التقاط الصوت، يرجى المحاولة مرة أخرى.");
+        };
+
+        recognition.start();
+    }
+
+    function matchAndPlaySurah(name) {
+        const select = document.getElementById('listenSurahSelect');
+        let found = false;
+        
+        for (let i = 0; i < select.options.length; i++) {
+            // إزالة ال التعريف لتسهيل المطابقة (مثال: النساء تصبح نساء)
+            const optionText = select.options[i].text.replace("سورة ", "").replace("ال", "");
+            const searchName = name.replace("ال", "");
+            
+            if (optionText.includes(searchName) || searchName.includes(optionText)) {
+                select.selectedIndex = i;
+                found = true;
+                updateAudio();
+                break;
+            }
+        }
+        
+        if (!found) {
+            alert(`لم أستطع العثور على سورة باسم: ${name}`);
+        }
+    }
+
     async function showTafsir(surahNum, ayahNum) {
         const box = document.getElementById('tafsirBox');
         box.style.display = 'block';
@@ -167,11 +308,8 @@
         } catch(e) { box.innerHTML = 'تعذر تحميل التفسير حالياً.'; }
     }
 
-    // دالة تنظيف النص من البسملة (الآية الأولى فقط)
     function cleanAyahText(text, surahNum, ayahNum) {
         if (ayahNum === 1 && surahNum !== 1 && surahNum !== 9) {
-            // حذف أول 39 حرفاً تقريباً (طول البسملة بالرسم العثماني مع الحركات)
-            // نستخدم Slice لضمان حذفها حتى لو اختلف التشكيل
             const bismillahLength = 38;
             if (text.startsWith("بِسْمِ")) {
                 return text.substring(bismillahLength).trim();
@@ -287,6 +425,9 @@
         const sNum = document.getElementById('listenSurahSelect').value;
         const rKey = document.getElementById('listenReciterSelect').value;
         const player = document.getElementById('audioPlayer');
+        
+        currentPlayCount = 1; // صفرنا العداد لتبدأ السورة الجديدة من الصفر
+        
         player.src = `${reciters[rKey]}${sNum.toString().padStart(3, '0')}.mp3`;
         player.play();
         fetchFullText(sNum, 'listenText');
