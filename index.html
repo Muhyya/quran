@@ -111,7 +111,7 @@
     <div class="listen-card" style="background:white; padding:20px; border-radius:15px; margin-bottom:20px; text-align:center;">
         
         <button id="voiceBtn" class="voice-btn" onclick="startVoiceSearch()">
-            🎤 اضغط وتحدث (مثال: افتح سورة النساء)
+            🎤 اضغط وتحدث (مثال: افتح سورة الفاتحة)
         </button>
 
         <select id="listenSurahSelect"></select>
@@ -155,14 +155,12 @@
     let currentPage = 1;
     let detailLevel = 'important';
     let currentSurahData = null;
-    
-    // متغيرات لتتبع تكرار الصوت
     let currentPlayCount = 1;
 
     const surahEncyclopedia = {
         1: { topic: "أم الكتاب وأساس الصلاة", people: "المؤمنين، الأنبياء، المكذبين", naming: "فاتحة الكتاب", goals: "إثبات التوحيد والعبودية", merit: "أعظم سورة ولا تصح الصلاة بدونها", lesson: "إخلاص الوجهة لله وحده" },
         2: { topic: "الاستخلاف في الأرض ومنهج الأمة", people: "آدم، إبراهيم، بني إسرائيل", naming: "لقصة البقرة مع بني إسرائيل", goals: "إعداد الأمة لعمارة الأرض بالدين", merit: "لا تستطيعها البطلة (السحرة) وتطرد الشياطين", lesson: "الطاعة المطلقة لله والامتثال لأمره" },
-        12: { topic: "رعاية الله لأنبيائه وتحقيق الرؤى", people: "يوسف، يعقوب، إخوة يوسف, امرأة العزيز", naming: "لقصة نبي الله يوسف", goals: "تثبيت فؤاد النبي ﷺ بالقصص", merit: "أحسن القصص وفيها تسلية لكل محزون", lesson: "الثبات في وجه الفتن والصبر مفتاح الفرج" },
+        12: { topic: "رعاية الله لأنبيائه وتحقيق الرؤى", people: "يوسف، يعقوب، إخوة يوسف، امرأة العزيز", naming: "لقصة نبي الله يوسف", goals: "تثبيت فؤاد النبي ﷺ بالقصص", merit: "أحسن القصص وفيها تسلية لكل محزون", lesson: "الثبات في وجه الفتن والصبر مفتاح الفرج" },
         18: { topic: "الاعتصام بالوحي من فتن الدنيا", people: "أهل الكهف، الخضر، ذو القرنين", naming: "لذكر قصة أصحاب الكهف", goals: "النجاة من الفتن الأربعة (الدين، المال، العلم، السلطة)", merit: "نور لمن قرأها يوم الجمعة وعصمة من الدجال", lesson: "اليقين بأن الدنيا فانية والآخرة خير وأبقى" },
         36: { topic: "إثبات البعث والرسالة والجزاء", people: "أصحاب القرية، مؤمن آل ياسين", naming: "للبدء بالحروف المقطعة (يس)", goals: "تقرير العقيدة والبعث والنشور", merit: "قلب القرآن وفيها تيسير للأمور", lesson: "المبادرة بالدعوة والعمل قبل الموت" }
     };
@@ -191,19 +189,18 @@
         const res = await fetch('https://api.alquran.cloud/v1/surah');
         const data = await res.json();
         const selects = ['khatmaSurahSelect', 'listenSurahSelect', 'browseSurahSelect'];
-        data.data.forEach((s, i) => {
+        
+        data.data.forEach((s) => {
             selects.forEach(id => {
-                document.getElementById(id).add(new Option(`سورة ${s.name}`, id === 'khatmaSurahSelect' ? surahStartPages[i] : s.number));
+                document.getElementById(id).add(new Option(`سورة ${s.name}`, s.number));
             });
         });
     }
 
-    // منطق تكرار الصوت الذكي
     function setupAudioLoopLogic() {
         const player = document.getElementById('audioPlayer');
         player.onended = () => {
             const mode = document.getElementById('repeatSelect').value;
-            
             if (mode === 'infinite') {
                 player.play();
             } else {
@@ -211,12 +208,11 @@
                 if (mode === 'custom') {
                     maxPlays = parseInt(document.getElementById('customRepeatInput').value) || 1;
                 }
-                
                 if (currentPlayCount < maxPlays) {
                     currentPlayCount++;
                     player.play();
                 } else {
-                    currentPlayCount = 1; // إعادة التعيين بعد انتهاء المرات
+                    currentPlayCount = 1;
                 }
             }
         };
@@ -227,7 +223,17 @@
         document.getElementById('customRepeatInput').style.display = (mode === 'custom') ? 'block' : 'none';
     }
 
-    // دالة البحث والتشغيل الصوتي
+    // دالة لتنظيف وتجريد النصوص العربية من التشكيل وتوحيد شكل الحروف للبحث الصحيح
+    function cleanArabicText(text) {
+        return text
+            .replace(/[\u064B-\u065F]/g, "")  // حذف التشكيل بالكامل (الفتحة، الضمة، الكسرة، الشدة...)
+            .replace(/[أإآا]/g, "ا")          // تحويل جميع أشكال الألف إلى ألف عادية
+            .replace(/ة/g, "ه")               // توحيد التاء المربوطة والهاء لضمان التطابق
+            .replace("سورة", "")
+            .replace("ال", "")                // حذف الـ التعريف لتسهيل المطابقة الجبرية
+            .trim();
+    }
+
     function startVoiceSearch() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -236,7 +242,7 @@
         }
 
         const recognition = new SpeechRecognition();
-        recognition.lang = 'ar-SA'; // تحديد اللغة العربية المخصصة للسعودية
+        recognition.lang = 'ar-SA';
         const btn = document.getElementById('voiceBtn');
         
         recognition.onstart = () => {
@@ -245,22 +251,22 @@
         };
 
         recognition.onend = () => {
-            btn.innerText = "🎤 اضغط وتحدث (مثال: افتح سورة النساء)";
+            btn.innerText = "🎤 اضغط وتحدث (مثال: افتح سورة الفاتحة)";
             btn.classList.remove('listening');
         };
 
         recognition.onresult = (event) => {
             let textResult = event.results[0][0].transcript;
-            // تنظيف النص وتبسيطه للبحث
-            textResult = textResult.replace("سوره", "سورة").trim();
             
             let surahName = "";
             if (textResult.includes("افتح سورة")) {
                 surahName = textResult.split("افتح سورة")[1].trim();
             } else if (textResult.includes("سورة")) {
                 surahName = textResult.split("سورة")[1].trim();
+            } else if (textResult.includes("افتح")) {
+                surahName = textResult.split("افتح")[1].trim();
             } else {
-                surahName = textResult;
+                surahName = textResult.trim();
             }
 
             if(surahName) {
@@ -279,22 +285,21 @@
         const select = document.getElementById('listenSurahSelect');
         let found = false;
         
+        // تنظيف الكلمة المنطوقة من المستخدم
+        const cleanSearch = cleanArabicText(name);
+
         for (let i = 0; i < select.options.length; i++) {
-            // إزالة ال التعريف لتسهيل المطابقة (مثال: النساء تصبح نساء)
-            const optionText = select.options[i].text.replace("سورة ", "").replace("ال", "");
-            const searchName = name.replace("ال", "");
+            // تنظيف اسم السورة القادم من القائمة (والذي يحتوي على تشكيل)
+            const cleanOption = cleanArabicText(select.options[i].text);
             
-            if (optionText.includes(searchName) || searchName.includes(optionText)) {
+            if (cleanOption.includes(cleanSearch) || cleanSearch.includes(cleanOption)) {
                 select.selectedIndex = i;
                 found = true;
                 updateAudio();
                 break;
             }
         }
-        
-        if (!found) {
-            alert(`لم أستطع العثور على سورة باسم: ${name}`);
-        }
+        if (!found) alert(`لم أستطع العثور على سورة باسم: ${name}`);
     }
 
     async function showTafsir(surahNum, ayahNum) {
@@ -330,6 +335,11 @@
             const data = await res.json();
             container.innerHTML = '';
             
+            if (data.data.ayahs.length > 0) {
+                const currentSurahNum = data.data.ayahs[0].surah.number;
+                document.getElementById('khatmaSurahSelect').value = currentSurahNum;
+            }
+
             let lastSurah = -1;
             data.data.ayahs.forEach(ayah => {
                 if(ayah.surah.number !== lastSurah) {
@@ -383,7 +393,7 @@
             content += `• <b>سبب التسمية:</b> ${extra.naming}<br>`;
             content += `• <b>الهدف الأساسي:</b> ${extra.goals}<br>`;
             content += `• <b>أبرز الشخصيات:</b> ${extra.people}<br>`;
-            content += `• <b>فضل السورة:</b> ${extra.merit}<br>`;
+            content += `• <b>فضل السورة:</b> ${extra.merit}<br>';
             content += `• <b>الدرس المستفاد:</b> ${extra.lesson}<br>`;
             content += `• <b>ترتيبها:</b> ${s.number} | آياتها: ${s.numberOfAyahs}`;
         }
@@ -425,9 +435,7 @@
         const sNum = document.getElementById('listenSurahSelect').value;
         const rKey = document.getElementById('listenReciterSelect').value;
         const player = document.getElementById('audioPlayer');
-        
-        currentPlayCount = 1; // صفرنا العداد لتبدأ السورة الجديدة من الصفر
-        
+        currentPlayCount = 1;
         player.src = `${reciters[rKey]}${sNum.toString().padStart(3, '0')}.mp3`;
         player.play();
         fetchFullText(sNum, 'listenText');
@@ -438,7 +446,14 @@
         openSection('khatmaMode');
     }
 
-    document.getElementById('khatmaSurahSelect').onchange = (e) => loadPage(parseInt(e.target.value));
+    document.getElementById('khatmaSurahSelect').onchange = (e) => {
+        const surahNum = parseInt(e.target.value);
+        if(surahNum) {
+            const startPage = surahStartPages[surahNum - 1];
+            loadPage(startPage);
+        }
+    };
+    
     document.getElementById('listenSurahSelect').onchange = updateAudio;
     document.getElementById('listenReciterSelect').onchange = updateAudio;
     document.getElementById('browseSurahSelect').onchange = (e) => fetchFullText(e.target.value, 'browseText');
