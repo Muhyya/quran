@@ -223,14 +223,13 @@
         document.getElementById('customRepeatInput').style.display = (mode === 'custom') ? 'block' : 'none';
     }
 
-    // دالة لتنظيف وتجريد النصوص العربية من التشكيل وتوحيد شكل الحروف للبحث الصحيح
     function cleanArabicText(text) {
         return text
-            .replace(/[\u064B-\u065F]/g, "")  // حذف التشكيل بالكامل (الفتحة، الضمة، الكسرة، الشدة...)
-            .replace(/[أإآا]/g, "ا")          // تحويل جميع أشكال الألف إلى ألف عادية
-            .replace(/ة/g, "ه")               // توحيد التاء المربوطة والهاء لضمان التطابق
+            .replace(/[\u064B-\u065F]/g, "")  
+            .replace(/[أإآا]/g, "ا")          
+            .replace(/ة/g, "ه")               
             .replace("سورة", "")
-            .replace("ال", "")                // حذف الـ التعريف لتسهيل المطابقة الجبرية
+            .replace("ال", "")                
             .trim();
     }
 
@@ -285,11 +284,9 @@
         const select = document.getElementById('listenSurahSelect');
         let found = false;
         
-        // تنظيف الكلمة المنطوقة من المستخدم
         const cleanSearch = cleanArabicText(name);
 
         for (let i = 0; i < select.options.length; i++) {
-            // تنظيف اسم السورة القادم من القائمة (والذي يحتوي على تشكيل)
             const cleanOption = cleanArabicText(select.options[i].text);
             
             if (cleanOption.includes(cleanSearch) || cleanSearch.includes(cleanOption)) {
@@ -393,7 +390,7 @@
             content += `• <b>سبب التسمية:</b> ${extra.naming}<br>`;
             content += `• <b>الهدف الأساسي:</b> ${extra.goals}<br>`;
             content += `• <b>أبرز الشخصيات:</b> ${extra.people}<br>`;
-            content += `• <b>فضل السورة:</b> ${extra.merit}<br>';
+            content += `• <b>فضل السورة:</b> ${extra.merit}<br>`; // التعديل الصحيح هنا بقفل النص المائل
             content += `• <b>الدرس المستفاد:</b> ${extra.lesson}<br>`;
             content += `• <b>ترتيبها:</b> ${s.number} | آياتها: ${s.numberOfAyahs}`;
         }
@@ -411,7 +408,7 @@
         container.innerHTML = '';
         if(num != 1 && num != 9) container.innerHTML += `<div class="basmala">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>`;
         
-        data.data.ayahs.forEach(a => {
+        data.data.forEach(a => {
             let t = cleanAyahText(a.text, parseInt(num), a.numberInSurah);
             container.innerHTML += `${t} <span class="ayah-num">﴾${a.numberInSurah}﴿</span> `;
         });
